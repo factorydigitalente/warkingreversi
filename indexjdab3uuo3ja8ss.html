@@ -26,9 +26,8 @@
 body {
     display: flex; flex-direction: column; align-items: center;
     background-color: var(--bg-color); color: white;
-    font-family: 'Hiragino Kaku Gothic ProN', sans-serif; 
-    margin: 0; 
-    padding: 10px 0; /* 上下の無駄な余白を消し、10pxだけ確保 */
+    font-family: 'Hiragino Kaku Gothic ProN', sans-serif; margin: 0; 
+    padding-bottom: calc(200px + env(safe-area-inset-bottom)); /* スマホでキャラに被らないよう余白を増やす */
 }
 
 #status-msg { margin-top: 20px; font-size: 1.4rem; font-weight: bold; height: 1.2em; color: #f1c40f; }
@@ -126,14 +125,7 @@ body {
 }
 
 /* UIパネル周り */
-#ui-panel { 
-    width: 95%;      /* 固定値ではなく画面幅に対する割合にする */
-    max-width: 400px; /* PCなどでは広がりすぎないように制限 */
-    padding: 10px; 
-    display: flex; 
-    flex-direction: column; 
-    gap: 10px; 
-}
+#ui-panel { width: 400px; padding: 10px; display: flex; flex-direction: column; gap: 10px; }
 .hp-bar-container { width: 100%; display: flex; justify-content: space-between; align-items: center; }
 .hp-bg { width: 150px; height: 10px; background: #334155; border-radius: 5px; overflow: hidden; }
 .hp-fill { height: 100%; transition: width 0.3s, background-color 0.3s; }
@@ -158,19 +150,9 @@ body {
 
 /* スマホ用のデフォルト盤面サイズ */
 @media (max-width: 999px) {
-	#board { 
-        grid-template-columns: repeat(8, min(11.5vw, 42px)); 
-    }
-    .cell { 
-        width: min(11.5vw, 42px); 
-        height: min(11.5vw, 42px); 
-    }
-    .stone { 
-        width: 80%; 
-        height: 80%; 
-        min-width: auto; 
-        min-height: auto; 
-    }
+    #board { grid-template-columns: repeat(8, 45px); }
+    .cell { width: 45px; height: 45px; }
+    .stone { width: 38px; height: 38px; min-width: 38px; min-height: 38px; }
 }
 
 .cell { 
@@ -230,16 +212,6 @@ body {
     background: #1e293b; color: #64748b; border: 1px solid #334155; border-radius: 8px;
     font-size: 20px; height: 60px; display: flex; align-items: center; justify-content: center;
     position: relative; /* 子要素の基準に */
-}
-@media (max-width: 999px) {
-    .keypad { 
-        grid-template-columns: repeat(3, 52px); /* 60pxから縮小 */
-        gap: 6px;
-    }
-    .key-btn { 
-        height: 52px; /* 60pxから縮小 */
-        font-size: 18px; 
-    }
 }
 .key-btn.active {
     background: #fff;
@@ -359,7 +331,7 @@ body {
     .character-overlay {
         top: auto;        /* 上固定を解除 */
         bottom: 0;       /* 画面の一番下に固定 */
-        height: 150px;   /* 立ち絵を表示する高さを確保 */
+        height: 200px;   /* 立ち絵を表示する高さを確保 */
         width: 100%;
         display: flex;
         justify-content: center;
@@ -377,8 +349,7 @@ body {
 
     .char-img { 
         width: 45%; 
-        max-height: 140px; /* 枠からはみ出さないサイズ */
-        opacity: 0.6; /* 文字を読みやすくするため少し薄くする */
+        max-height: 180px; /* 枠からはみ出さないサイズ */
         object-fit: contain;
     }
 }
