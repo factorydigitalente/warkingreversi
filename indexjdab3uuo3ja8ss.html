@@ -26,8 +26,9 @@
 body {
     display: flex; flex-direction: column; align-items: center;
     background-color: var(--bg-color); color: white;
-    font-family: 'Hiragino Kaku Gothic ProN', sans-serif; margin: 0; 
-    padding-bottom: calc(100px + env(safe-area-inset-bottom)); /* スマホでキャラに被らないよう余白を増やす */
+    font-family: 'Hiragino Kaku Gothic ProN', sans-serif; 
+    margin: 0; 
+    padding: 10px 0; /* 上下の無駄な余白を消し、10pxだけ確保 */
 }
 
 #status-msg { margin-top: 20px; font-size: 1.4rem; font-weight: bold; height: 1.2em; color: #f1c40f; }
@@ -157,18 +158,16 @@ body {
 
 /* スマホ用のデフォルト盤面サイズ */
 @media (max-width: 999px) {
-    #board { 
-        /* 画面横幅の96%を8等分し、1pxの隙間(gap)を考慮 */
-        grid-template-columns: repeat(8, calc(96vw / 8 - 1px)); 
+	#board { 
+        grid-template-columns: repeat(8, min(11.5vw, 42px)); 
     }
     .cell { 
-        width: calc(96vw / 8 - 1px); 
-        height: calc(96vw / 8 - 1px); 
+        width: min(11.5vw, 42px); 
+        height: min(11.5vw, 42px); 
     }
     .stone { 
-        /* 石のサイズもセルに合わせて自動調整 */
-        width: 85%; 
-        height: 85%; 
+        width: 80%; 
+        height: 80%; 
         min-width: auto; 
         min-height: auto; 
     }
@@ -231,6 +230,16 @@ body {
     background: #1e293b; color: #64748b; border: 1px solid #334155; border-radius: 8px;
     font-size: 20px; height: 60px; display: flex; align-items: center; justify-content: center;
     position: relative; /* 子要素の基準に */
+}
+@media (max-width: 999px) {
+    .keypad { 
+        grid-template-columns: repeat(3, 52px); /* 60pxから縮小 */
+        gap: 6px;
+    }
+    .key-btn { 
+        height: 52px; /* 60pxから縮小 */
+        font-size: 18px; 
+    }
 }
 .key-btn.active {
     background: #fff;
