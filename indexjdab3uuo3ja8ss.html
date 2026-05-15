@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黒白仁棋 - WarKing Reversi</title>
+<title>黒白仁棋 - Walking Reversi</title>
 <style>
 /* 全てのボタンに適用 */
 .key-btn, button {
@@ -35,7 +35,7 @@ body {
 
 #score-panel {
     display: flex; gap: 30px; margin-bottom: 10px; background: rgba(255,255,255,0.05);
-    padding: 15px 30px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1);
+    padding: 0px 30px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1);
 }
 
 .score-box { text-align: center; min-width: 90px; }
@@ -118,25 +118,51 @@ body {
         gap: 30px;
     }
 
-    #board {
-        grid-template-columns: repeat(8, 40px);
+	#board {
+        grid-template-columns: repeat(8, 50px); /* 40px → 50px に拡大 */
+        border-width: 6px; /* 枠線も少し太くして重厚感を出す */
     }
-    .cell { width: 40px; height: 40px; }
-    .stone { width: 34px; height: 34px; min-width: 34px; min-height: 34px; }
+	.cell { 
+        width: 50px; 
+        height: 50px; 
+    }
+
+    .stone { 
+        width: 42px;   /* マスに合わせて拡大 */
+        height: 42px; 
+        min-width: 42px; 
+        min-height: 42px; 
+    }
+
+    .avatar {
+        width: 36px;   /* 将（アバター）も一回り大きく */
+        height: 36px;
+    }
 }
 
 /* UIパネル周り */
-#ui-panel { width: 400px; padding: 10px; display: flex; flex-direction: column; gap: 10px; }
+#ui-panel { width: 400px; padding: 10px; display: flex; flex-direction: column; gap: 5px; }
 .hp-bar-container { width: 100%; display: flex; justify-content: space-between; align-items: center; }
 .hp-bg { width: 150px; height: 10px; background: #334155; border-radius: 5px; overflow: hidden; }
 .hp-fill { height: 100%; transition: width 0.3s, background-color 0.3s; }
 .p1-hp { background: var(--p1-color); box-shadow: 0 0 10px var(--p1-color); }
 .p2-hp { background: var(--p2-color); box-shadow: 0 0 10px var(--p2-color); }
 
-#ap-indicator { 
-    text-align: center; font-weight: bold; font-size: 1.2rem; color: #f1c40f;
-    background: rgba(241, 196, 15, 0.1); padding: 5px; border-radius: 8px;
-    visibility: hidden;
+/* 既存の #ap-indicator スタイルを以下に差し替え、または追加 */
+.ap-indicator-mini {
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #f1c40f;
+    background: rgba(241, 196, 15, 0.1);
+    padding: 2px 5px;
+    border-radius: 4px;
+    margin-top: 4px;
+    visibility: hidden; /* 初期状態は非表示 */
+}
+
+/* 巡回フェーズ中のプレイヤー側だけ表示するための制御用 */
+.ap-visible {
+    visibility: visible !important;
 }
 
 /* --- 盤面と罫線のスタイル --- */
@@ -154,6 +180,32 @@ body {
     #board { grid-template-columns: repeat(8, 45px); }
     .cell { width: 45px; height: 45px; }
     .stone { width: 38px; height: 38px; min-width: 38px; min-height: 38px; }
+
+    /* 1. 【タイトル画面】ロゴ（h1）を下に下げる */
+    #startModal h1 {
+        margin-top: 60px !important;
+        margin-bottom: 20px !important;
+    }
+
+    /* 2. 【ゲーム画面】ロゴ（コンテナ）を下に下げる */
+    .header-logo-container {
+        margin-top: 60px !important; /* これでスイッチを避ける */
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+
+    /* 右上のスイッチ類の位置を固定 */
+    #right-top-menu {
+        top: 10px;
+        right: 10px;
+        z-index: 100; /* ロゴより手前に表示 */
+    }
+    
+    /* メッセージの位置調整 */
+    #status-msg {
+        margin-top: 10px;
+    }
 }
 
 .cell { 
@@ -161,8 +213,49 @@ body {
     align-items: center; 
     justify-content: center; 
     background-color: var(--board-color); 
-    position: relative; /* 子要素（王）を重ねる基準点にする */
+    position: relative; /* 子要素（将）を重ねる基準点にする */
 }
+
+
+/* 黄色い盤面を活かしつつ、ベタ塗りを排除 */
+#board .cell.highlight {
+    background-color: rgba(255, 255, 255, 0.2) !important; /* 盤面の黄色を透かしつつ、少し明るく */
+    cursor: pointer;
+    position: relative;
+    z-index: 10;
+    box-sizing: border-box;
+
+    /* 「色」ではなく「光」で縁取る */
+    border: 2px solid rgba(255, 255, 255, 0.8) !important;
+    /* 内側に白い光を溜める */
+    box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.6) !important;
+    
+    /* ゆっくりと「呼吸」させる */
+    animation: divine-pulse 2.0s infinite ease-in-out !important;
+}
+
+@keyframes divine-pulse {
+    0% {
+        box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.3);
+        opacity: 0.7;
+    }
+    50% {
+        box-shadow: inset 0 0 25px rgba(255, 255, 255, 0.9);
+        opacity: 1.0;
+    }
+    100% {
+        box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.3);
+        opacity: 0.7;
+    }
+}
+
+/* ホバー時は盤面の黄色をさらに輝かせる */
+#board .cell.highlight:hover {
+    background-color: rgba(255, 255, 255, 0.4) !important;
+    box-shadow: inset 0 0 30px rgba(255, 255, 255, 1) !important;
+    animation: none !important;
+}
+
 
 .cell.visited { background-color: var(--visited-color) !important; }
 .stone { border-radius: 50%; transition: 0.3s; z-index: 2; box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
@@ -181,7 +274,6 @@ body {
     top: 50%;
     left: 50%;
     
-    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -194,17 +286,19 @@ body {
 }
 /* .av-p1 { background: #991b1b; top: 5px; left: 5px; } */
 .av-p1 {
-    background-image: url('./img/king_p1.png');
+    background-image: url('./img/general_p1.png');
     background-color: transparent; /* 背景色を透明に */
-	top: 15%;  /* 中心(50%)より上へ */
-    left: 15%; /* 中心(50%)より左へ */
+	top: 20%;  /* 中心(50%)より上へ */
+    left: 20%; /* 中心(50%)より左へ */
+    filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));
 }
 /* .av-p2 { background: #1e40af; bottom: 5px; right: 5px; } */
 .av-p2 {
-    background-image: url('./img/king_p2.png');
+    background-image: url('./img/general_p2.png');
     background-color: transparent; /* 背景色を透明に */
-	top: 25%;  /* 中心(50%)に近いが少し上 */
-    left: 30%; /* 中心(50%)に近いが少し左 */
+	top: 40%;  /* 中心(50%)に近いが少し上 */
+    left: 35%; /* 中心(50%)に近いが少し左 */
+    filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));
 }
 
 .highlight { background-color: #334155; cursor: pointer; }
@@ -233,20 +327,33 @@ body {
 .floating-text { position: fixed; font-weight: bold; z-index: 1000; animation: floatUp 0.8s forwards; }
 @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-60px); opacity: 0; } }
 
+/* 右上メニュー全体のコンテナ */
+#right-top-menu {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    align-items: center; /* 上下中央揃え */
+    gap: 12px;           /* スイッチとボタンの間隔 */
+    z-index: 2000;       /* 最前面にくるように高めの数値 */
+}
+/* BGMスイッチ */
+#game-bgm-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 4px 10px;
+    border-radius: 20px;
+}
 #return-to-title-btn {
-    position: absolute; 
-    top: 0;             /* ロゴの上端に合わせる */
-    right: 5%;          /* 右端から少し内側（スマホ時） */
-    z-index: 1500;
-    cursor: pointer;
-    visibility: hidden;
     background: none;
     border: none;
     padding: 0;
-    width: 50px;        /* サイズを少し調整 */
-    height: auto;
+    cursor: pointer;
+    width: 44px;  /* ボタンのサイズを固定 */
+    height: 44px; /* タップしやすいサイズ */
 }
-
 #return-to-title-btn img {
     /* 中の画像がボタンの幅（60px）に合わせるように強制 */
     width: 100%;
@@ -390,6 +497,90 @@ body {
     font-weight: bold;
 }
 
+/* 操作中のアバターを点滅させるアニメーション */
+@keyframes blink-avatar {
+    0% { opacity: 1; filter: brightness(1) drop-shadow(0 0 2px white); }
+    50% { opacity: 0.6; filter: brightness(1.8) drop-shadow(0 0 10px #f1c40f); }
+    100% { opacity: 1; filter: brightness(1) drop-shadow(0 0 2px white); }
+}
+/* 脈動アニメーションの定義 */
+@keyframes pulse {
+    0% {
+        transform: scale(1); /* 元のサイズ */
+        filter: brightness(1);
+    }
+    50% {
+        transform: scale(1.5); /* 1.5倍に拡大 */
+        filter: brightness(1.2); /* 少し明るくする（お好みで） */
+    }
+    100% {
+        transform: scale(1); /* 元に戻る */
+        filter: brightness(1);
+    }
+}
+
+.active-turn-avatar {
+    animation: 
+        blink 1s infinite alternate, 
+        pulse 1.2s infinite ease-in-out; /* 脈動 */
+    z-index: 20 !important; /* 他のものより手前に */
+}
+
+/* トグルスイッチの基本デザイン */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 22px;
+}
+//BGMトグルスイッチ
+.switch input { 
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #475569;
+    transition: .3s;
+    border-radius: 22px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+}
+
+/* ONの状態 */
+input:checked + .slider {
+    background-color: var(--p2-color); /* プレイヤー2の色（青系）を流用 */
+}
+
+input:checked + .slider:before {
+    transform: translateX(22px);
+}
+
+/* APインジケーター用の点滅アニメーション */
+.ap-pulse {
+    animation: ap-blink 1.2s infinite ease-in-out;
+    border: 1px solid rgba(241, 196, 15, 0.5); /* 黄金色の光 */
+}
+
+@keyframes ap-blink {
+    0% { opacity: 1; box-shadow: 0 0 5px rgba(241, 196, 15, 0.2); }
+    50% { opacity: 0.8; box-shadow: 0 0 15px rgba(241, 196, 15, 0.8); }
+    100% { opacity: 1; box-shadow: 0 0 5px rgba(241, 196, 15, 0.2); }
+}
 </style>
 </head>
 <body>
@@ -412,40 +603,38 @@ body {
             <label style="display:block; margin-bottom:10px; font-size:1.2rem; color:#94a3b8;">Battle Mode</label>
 				<select id="gameModeSelect" onchange="updateCpuUIVisibility()" style="width:100%; padding:10px; background:#1e293b; color:white; border:1px solid #334155; border-radius:5px; font-size:1rem;">
 				    <option value="pvp">P1 vs P2 (２人対戦)</option>
-				    <option value="pve">You vs CPU (CPUと対戦)</option>
-				    <option value="cvc">CPU vs CPU (CPU同士を観戦)</option>
+				    <option value="pve">You vs CPU (CPU対戦)</option>
+				    <option value="cvc">CPU vs CPU (CPU観戦)</option>
 				</select>
 
 				<!-- CPU性格選択：既存の余白ルールに合わせたコンテナ -->
 				<div id="cpuCharContainer" style="margin-top:20px; display:none;">
 				    <label style="display:block; margin-bottom:10px; font-size:1.2rem; color:#94a3b8;">CPU Type</label>
 				    <select id="cpuCharacterSelect" onchange="updateCpuDescription()" style="width:100%; padding:10px; background:#1e293b; color:white; border:1px solid #334155; border-radius:5px; font-size:1rem;">
-				        <option value="iron">Iron King「堅実王」（Guardian:防御型）</option>
-				        <option value="blood">Blood King「無謀王」（Tyrant:猛進型）</option>
-				        <option value="saint">Saint King「慈愛王」（Priest:回復型）</option>
-				        <option value="joker">Joker King「乱心王」（Trickster:道化師型）</option>
+				        <option value="iron">Iron「堅実将」（Guardian:防御型）</option>
+				        <option value="blood">Blood「熱血将」（Tyrant:猛進型）</option>
+				        <option value="saint">Saint「慈愛将」（Priest:回復型）</option>
+				        <option value="joker">Joker「乱心将」（Trickster:道化師型）</option>
 				    </select>
 				    <div id="cpuCharDescription" style="margin-top:15px; padding:12px; background:rgba(255,255,255,0.05); border-left:3px solid #3b82f6; border-radius:4px; min-height:50px;">
 					    <p id="cpuCharText" style="font-size:0.85rem; color:#cbd5e1; line-height:1.6; margin:0;">
 					        キャラクターを選択してください。
 					    </p>
 					</div>
+					<div style="margin-bottom:20px;">
+					    <label style="display:block; margin-bottom:10px; font-size:1.2rem; color:#94a3b8;">
+					        CPU Speed: <span id="speedValue">500</span>ms
+					    </label>
+					    <input type="range" id="cpuSpeedRange" min="100" max="5000" step="100" value="2500" 
+					           style="width:100%; cursor:pointer;" 
+					           oninput="document.getElementById('speedValue').innerText = this.value">
+					</div>
 				</div>
 
         </div>
-
-		<!-- 対戦形式選択の下に追加 -->
-		<div style="margin-bottom:20px;">
-		    <label style="display:block; margin-bottom:10px; font-size:1.2rem; color:#94a3b8;">
-		        CPU Speed: <span id="speedValue">500</span>ms
-		    </label>
-		    <input type="range" id="cpuSpeedRange" min="100" max="5000" step="100" value="2500" 
-		           style="width:100%; cursor:pointer;" 
-		           oninput="document.getElementById('speedValue').innerText = this.value">
-		</div>
 		
 		<details style="margin-bottom:20px; text-align:left; background:rgba(255,255,255,0.05); padding:10px; border-radius:5px;">
-		    <summary style="color:#f1c40f; cursor:pointer; font-size:1.0rem; margin-bottom:5px;">Config(ルール設定)</summary>
+		    <summary style="color:#f1c40f; cursor:pointer; font-size:1.0rem; margin-bottom:5px;">Config(設定)</summary>
 		    
 		    <div style="font-size:0.75rem; display:grid; gap:10px; margin-top:10px;">
 		        <!-- 初期HP -->
@@ -455,8 +644,8 @@ body {
 		        <!-- 初期AP倍率 -->
 		        <label>Starting AP Rate (初期AP倍率):
 		            <select id="conf-apRate" style="width:100%; background:#1e293b; color:white; border:1px solid #334155;" onchange="updateRuleText();">
-		                <option value="1">Stone : x1.0 (石の数 x 1.0)</option>
-		                <option value="0.5">Stone : x0.5 (石の数×0.5)</option>
+		                <option value="1">Stone : x1.0 (石数 x 1.0)</option>
+		                <option value="0.5">Stone : x0.5 (石数×0.5)</option>
 		            </select>
 		        </label>
 		        <hr style="border:0.1px solid rgba(255,255,255,0.1);">
@@ -470,7 +659,7 @@ body {
 		        <label>Same Area Move (再通過): <span id="val-cRepeat">-2</span>
 		            <input type="range" id="conf-cRepeat" min="1" max="3" step="1" value="2" oninput="document.getElementById('val-cRepeat').innerText='-'+this.value; updateRuleText();" style="width:100%;">
 		        </label>
-		        <label>Enemy King Area Move (敵王待ち伏せ突破): <span id="val-cBoss">-15</span>
+		        <label>Enemy general Area Move (敵将突破): <span id="val-cBoss">-15</span>
 		            <input type="range" id="conf-cBoss" min="5" max="30" step="5" value="15" oninput="document.getElementById('val-cBoss').innerText='-'+this.value; updateRuleText();" style="width:100%;">
 		        </label>
 		        <hr style="border:0.1px solid rgba(255,255,255,0.1);">
@@ -483,10 +672,10 @@ body {
 		        </label>
 		    </div>
 		</details>
-        
         <button onclick="startGameFromModal()" style="width:100%; padding:15px; background:#af4444; color:white; border:none; border-radius:5px; font-size:1.6rem;font-weight:bold; cursor:pointer; margin-bottom:15px;">START 開始</button>
         <button onclick="openStory()" style="width:100%; padding:10px; background:transparent; color:#f1c40f; border:1px solid #f1c40f; border-radius:5px; cursor:pointer;font-size:1.1rem;">STORY 物語</button>
     </div>
+    <p><img src="./img/fde.png" width="250px;max-width: 50%; height: auto;" alt="©2026 Factory Digital Entertainment"></p>
 </div>
 
 <!-- 物語モーダル -->
@@ -521,47 +710,59 @@ body {
             <img src="./img/moon.png" alt="Moon" style="width: 100%; height: auto; border-radius: 5px; opacity: 0.8;">
         </div>
         
-        <h2 style="color:#f1c40f; text-align:center; border-bottom:1px solid #f1c40f; padding-bottom:20px; margin-bottom:30px;">黒白仁棋<br>WarKing Reversi<br>- STORY -</h2>
+        <h2 style="color:#f1c40f; text-align:center; border-bottom:1px solid #f1c40f; padding-bottom:10px; margin-bottom:0px;">- STORY -</h2>
         <div id="storyContent" style="line-height:2; color:#e2e8f0; font-size:1rem; white-space:pre-wrap;">
-<!-- 物語本文 -->
 Once, in the age of myths, might was right.
-Heroes proved their power by taking enemy heads.
+Heroes proved their power by tageneral enemy heads.
 
 But the age of heroes has ended.
-Now, in this harsh time, a King must show "Jin" — heart for the people.
+Now, in this harsh time, a general must show "Jin" — heart for the people.
 
 Territory is not a sign of power, but a heavy responsibility ――
 
-The King must walk around the area, using his own life to lead and care for his soldiers.
-Sometimes, to save a soldier alone in enemy lines, the King must break through the enemy ambush.
+The general must walk around the area, using his own life to lead and care for his soldiers.
+Sometimes, to save a soldier alone in enemy lines, the general must break through the enemy ambush.
 
-This is the record of lonely Kings who left the path of power to find "Jin".
+This is the record of lonely generals who left the path of power to find "Jin".
 
 　　　　　　　　　　　*　　　　*　　　　*
 
 かつて、力こそが正義であった神話の時代。
 英雄たちは敵の首を獲ることでその武を示した。
 
-しかし、神話と英雄の時代は終わり、今は王に兵を労わる「仁」が強く求められる、厳しい時代。
+しかし、神話と英雄の時代は終わり、今は将に兵を労わる「仁」が強く求められる、厳しい時代。
 
-領土は、支配の証ではなく、責任の重さである ――
+陣地は、支配の証ではなく、責任の重さである ――
 
-広げた陣地を「王」自らが命を削って巡回し、部下を労り導け。
-時には敵陣に孤立した部下を救うため、王自ら、敵の待ち伏せを強行突破せよ。
+広げた陣地を「将」自らが命を削って巡回し、部下を労り導け。
+時には敵陣に孤立した部下を救うため、将自ら、敵の待ち伏せを強行突破せよ。
 
-これは、覇道を捨て、「仁」を求めた王たちの孤独な巡回の記録である。
+これは、覇道を捨て、「仁」を求めた将たちの孤独な巡回の記録である。
+
+　　　　　　　　　　　*　　　　*　　　　*
+
+在神話與英雄並存的往昔，力量即是正義。
+英雄們以斬下敵人之首來彰顯武勳。
+
+然而，英雄的時代已然落幕。
+如今，身為将，必須對士卒抱持「仁」之心。
+這是一個充滿嚴酷考驗、對将者之道有著全新要求的時代。
+
+陣地，不再是支配的證明，而是責任的重量——
+
+身為「将」，你必須在親手開闢的陣地中，不惜耗損自身性命，親自巡視以體恤並引領部屬。
+即便部屬受困於敵陣，将也應當親率親征，強行突破敵軍的埋伏。
+
+這是一段捨棄霸道、追求「仁政」的将者們，孤獨巡視的紀錄。
         </div>
-        <button onclick="closeStory()" style="display:block; margin:40px auto 0; padding:10px 40px; background:#f1c40f; color:#000; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">閉じる</button>
+        <button onclick="closeStory()" style="display:block; margin:20px auto 0; padding:10px 40px; background:#f1c40f; color:#000; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">閉じる</button>
     </div>
 </div>
 
 <!-- ゲーム本編画面のタイトルロゴと戻るボタン -->
 <div class="header-logo-container">
     <img src="./img/logo_u.png" alt="黒白仁棋" class="header-logo-img">
-    <img src="./img/logo_d.png" alt="WarKing Reversi" class="header-logo-img">
-    <button id="return-to-title-btn" onclick="returnToTitle()">
-        <img src="./img/btn_return.png" alt="戻る">
-    </button>
+    <img src="./img/logo_d.png" alt="Walking Reversi" class="header-logo-img">
 </div>
 
 <!-- 全体を横並びにするためのコンテナ -->
@@ -571,78 +772,107 @@ This is the record of lonely Kings who left the path of power to find "Jin".
     <details class="game-guide" open style="text-align: left; padding: 10px; background: rgba(0,0,0,0.3);">
     	<summary class="rule-summary">📜 ルール Rule</summary>
         <div class="guide-content">
-		    <strong>■ 兵が敵陣の石を裏返して陣地を広げたら、「王」による巡回フェーズに突入。</strong><br>
+		    <strong>■ 兵が敵陣の石を裏返して陣地を広げたら、「将」による巡回フェーズに突入。</strong><br>
 		    ・AP ＝ 自分の石の総数×<span id="rule-apRate" class="var-num"></span><br>
-		    APが0になるまで、王自身が巡回し、戦況を見て回れ。<br>
-		    分断された自陣の兵を労わるために、時には王自ら、敵陣の中を進む必要もある。<br>
+		    APが0になるまで、将自身が巡回し、戦況を見て回れ。<br>
+		    分断された自陣の兵を労わるために、時には将自ら、敵陣の中を進む必要もある。<br>
 		    <br>
 			<strong>■ 巡回コスト（1歩ごとにHPから減算）</strong><br>
 		    ・自陣内移動は疲労する：<strong>HP <span id="rule-cOwn" class="var-num"></span></strong><br>
 		    ・敵陣内移動は怪我を負う：<strong>HP <span id="rule-cEnemy" class="var-num"></span></strong><br>
 		    ・ターン内再通過も疲弊する：<strong>HP <span id="rule-cRepeat" class="var-num"></span></strong><br>
-		    ・敵王の突破は待ち伏せを受ける：<strong>HP <span id="rule-cBoss" class="var-num"></span></strong><br>
+		    ・敵将の突破は待ち伏せを受ける：<strong>HP <span id="rule-cBoss" class="var-num"></span></strong><br>
 		    <br>
 		    <strong>■ 回復・攻撃方法</strong><br>
 		    ・石を裏返して獲得した陣地の<strong>枚数 × <span id="rule-rRate" class="var-num"></span></strong>のHPが回復。<br>
-		    ・敵王が乗る陣地を裏返すと、敵に <strong><span id="rule-atkBase" class="var-num"></span> + (裏返した枚数×2)</strong> の大ダメージ。<br>
+		    ・敵将が乗る陣地を裏返すと、敵に <strong><span id="rule-atkBase" class="var-num"></span> + (裏返した枚数×2)</strong> の大ダメージ。<br>
 		    <br>
 		    <strong>■ 勝敗決定条件</strong><br>
 		    ・HPが<strong>0以下</strong>になった時点で敗北。<br>
 		    ・両者石を置けなくなった場合、<strong>総合得点</strong>にて勝敗。<br>
 		    <strong>総合得点 ＝ (自分の石の数 × 10) ＋ (残りHP × 8)</strong>
 			<hr>
-			<strong>■ Once your soldiers flip the enemy's stones and expand your territory, the "King's Walking Phase" begins.</strong><br>
-			・AP = Total number of your stones × <span id="rule-apRate-en" class="var-num"></span><br>
-			The King must personally patrol and survey the battlefield until AP reaches 0.<br>
-			To care for your divided soldiers, the King may sometimes need to venture deep into enemy territory.<br>
+			<strong>■ Once your soldiers flip the enemy's stones and expand your area, the "general's Walking Phase" begins.</strong><br>
+			・AP = Total your stones × <span id="rule-apRate-en" class="var-num"></span><br>
+			The general must patrol and survey the battlefield until AP reaches 0.<br>
+			To care for your divided soldiers, the general may sometimes need to venture deep into enemy area.<br>
 			<br>
 			<strong>■ Walking Costs (HP deducted per step)</strong><br>
-			・Moving within friendly territory causes fatigue: <strong>HP <span id="rule-cOwn-en" class="var-num"></span></strong><br>
-			・Moving within enemy territory results in injuries: <strong>HP <span id="rule-cEnemy-en" class="var-num"></span></strong><br>
-			・Re-entering a tile during the same turn causes exhaustion: <strong>HP <span id="rule-cRepeat-en" class="var-num"></span></strong><br>
-			・Passing through the enemy King leads to an ambush: <strong>HP <span id="rule-cBoss-en" class="var-num"></span></strong><br>
+			・Moving within own area causes fatigue: <strong>HP <span id="rule-cOwn-en" class="var-num"></span></strong><br>
+			・Moving within enemy area results in injuries: <strong>HP <span id="rule-cEnemy-en" class="var-num"></span></strong><br>
+			・Re-entering a area during the same turn causes exhaustion: <strong>HP <span id="rule-cRepeat-en" class="var-num"></span></strong><br>
+			・Passing through the enemy general leads to an ambush: <strong>HP <span id="rule-cBoss-en" class="var-num"></span></strong><br>
 			<br>
 			<strong>■ Recovery and Attack Methods</strong><br>
 			・Recover HP equal to <strong>(Number of stones flipped) × <span id="rule-rRate-en" class="var-num"></span></strong>.<br>
-			・Flipping the tile where the enemy King stands deals massive damage: <strong><span id="rule-atkBase-en" class="var-num"></span> + (Flipped stones × 2)</strong>.<br>
+			・Flipping the tile where the enemy general stands cause great damage: <strong><span id="rule-atkBase-en" class="var-num"></span> + (Flipped stones × 2)</strong>.<br>
 			<br>
-			<strong>■ Victory/Defeat Conditions</strong><br>
-			・Defeat occurs immediately when HP reaches <strong>0 or below</strong>.<br>
+			<strong>■ Victory/Lose Conditions</strong><br>
+			・Defeat occurs immediately when HP reaches <strong>0</strong>.<br>
 			・If neither player can place a stone, the winner is decided by the <strong>Total Score</strong>.<br>
-			<strong>Total Score = (Your total stones × 10) + (Remaining HP × 8)</strong>
+			<strong>Total Score = (Own total stones × 10) + (Remaining HP × 8)</strong>
+			<hr>
+		    <strong>■ 士兵翻轉敵陣棋子並擴張領地後，即進入「將」巡回階段。</strong><br>
+		    ・AP（行動點數）＝ 己方棋子總數 x <span id="rule-apRate-tc" class="var-num"></span><br>
+		    在 AP 歸零前，將須親自巡視並視察戰況。<br>
+		    為了鼓勵被切斷聯繫的己方士兵，有時將也必須親自深入敵陣。<br>
+		    <br>
+			<strong>■ 巡回代價（每走1步從 HP 中扣除）</strong><br>
+		    ・在己方領地內移動（疲勞）：<strong>HP <span id="rule-cOwn-tc" class="var-num"></span></strong><br>
+		    ・在敵方領地內移動（受傷）：<strong>HP <span id="rule-cEnemy-tc" class="var-num"></span></strong><br>
+		    ・回合內重複經過同一處（力竭）：<strong>HP <span id="rule-cRepeat-tc" class="var-num"></span></strong><br>
+		    ・突圍敵將所在之處（遭遇伏擊）：<strong>HP <span id="rule-cBoss-tc" class="var-num"></span></strong><br>
+		    <br>
+		    <strong>■ 恢復・攻擊方式</strong><br>
+		    ・恢復：翻轉棋子所獲得的領地<strong>數量 x <span id="rule-rRate-tc" class="var-num"></span></strong>的HP。<br>
+		    ・攻擊：翻轉敵將所在的領地，可對其造成<strong><span id="rule-atkBase-tc" class="var-num"></span> + (翻轉數量 x 2)</strong> 的重大傷害。<br>
+		    <br>
+		    <strong>■ 勝負判定條件</strong><br>
+		    ・戰敗：當 HP 降至<strong>0 或以下</strong>時。<br>
+		    ・得分判定：若雙方均無法再落子，則以<strong>綜合得分</strong>決定勝負。<br>
+		    <strong>綜合得分 ＝ (己方棋子數 x 10) ＋ (剩餘HP x 8)</strong>
 		</div>
 	</details>
 
-	<!-- 右上固定の画像戻るボタン -->
-	<button id="return-to-title-btn" onclick="returnToTitle()">
-	    <img src="./img/btn_return.png" alt="戻る" style="width: 100%; height: auto; display: block;">
-	</button>
+	<div id="right-top-menu">
+		<div id="game-bgm-ctrl">
+		    <span style="font-size: 0.8rem;">♪</span>
+		    <label class="switch">
+		        <input type="checkbox" id="bgmToggleGame" checked onchange="syncBgmToggles(this.checked)">
+		        <span class="slider"></span>
+		    </label>
+		</div>
+		<!-- 右上固定の画像戻るボタン -->
+		<button id="return-to-title-btn" onclick="returnToTitle()">
+		    <img src="./img/btn_return.png" alt="戻る" style="width: 100%; height: auto; display: block;">
+		</button>
+	</div>
 
 	<!-- ゲーム本体をまとめるエリア -->
 	<div class="game-main-content">
+
 		<div id="status-msg">黒白仁棋</div>
 
 		<div id="score-panel">
 		    <div class="score-box">
 		        <div class="score-label">P1 SCORE</div>
 		        <div id="p1-total-score" class="score-value p1-text">0</div>
+		        <div id="p1-ap-indicator" class="ap-indicator-mini">AP: <span id="p1-ap-val">0</span>/<span id="p1-ap-max">0</span></div>
 		    </div>
 		    <div class="score-box">
 		        <div class="score-label">P2 SCORE</div>
 		        <div id="p2-total-score" class="score-value p2-text">0</div>
+		        <div id="p2-ap-indicator" class="ap-indicator-mini">AP: <span id="p2-ap-val">0</span>/<span id="p2-ap-max">0</span></div>
 		    </div>
 		</div>
 
 
 		<div id="ui-panel">
 		    <!-- リアルタイム計算式エリア -->
-		    <div id="formula-display" style="font-size: 0.75rem; color: #94a3b8; text-align: center; margin-bottom: 8px; font-family: monospace; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 4px;">
+		    <div id="formula-display" style="font-size: 0.75rem; color: #94a3b8; text-align: center; margin-bottom: 0px; font-family: monospace; background: rgba(0,0,0,0.2); padding: 0px; border-radius: 4px;">
 		        <div id="p1-formula">P1: (0stone × 10) + (50HP × 8) = 400</div>
 		        <div id="p2-formula">P2: (0stone × 10) + (50HP × 8) = 400</div>
 		    </div>
-
-		    <div id="ap-indicator">AP: <span id="ap-val">0</span> / <span id="ap-max">0</span></div>
-
 		    <div class="hp-bar-container">
 		        <div>P1(Black) HP: <span id="p1-hp-val">50</span> <div class="hp-bg"><div id="p1-hp-bar" class="hp-fill p1-hp"></div></div></div>
 		        <div style="text-align: right;">P2(White) HP: <span id="p2-hp-val">50</span> <div class="hp-bg"><div id="p2-hp-bar" class="hp-fill p2-hp"></div></div></div>
@@ -690,6 +920,8 @@ let ap = 0, apMax = 0;
 let visitedCells = new Set();
 let activeKeys = new Set();
 let isPvE = false;
+let bgmEnabled = true;
+let isGameOver = false; // 【追加】勝敗が決まったかどうかを管理
 
 // 効果音の定義
 const sounds = {
@@ -739,19 +971,28 @@ function drawBoard() {
                     // 画像を表示するために av-p1 や av-p2 を付与
                     av.className = `avatar av-p${p}`; 
                     
-                    // ↓【修正ポイント】画像化するのでテキスト（P1/P2）は空文字にする
-                    av.innerText = ''; 
-                    
-                    av.id = `av-node-${p}`;
-
-                    if (parseInt(p) === currentPlayer) av.style.zIndex = "11";
+					// 巡回モード中かつ、その人のターンの時だけ点滅クラスを付与
+			        if (isMovingMode && parseInt(p) === currentPlayer) {
+			            av.classList.add('active-turn-avatar');
+			            av.style.zIndex = "20";
+			        } else if (parseInt(p) === currentPlayer) {
+			            av.style.zIndex = "11";
+			        }
+			        
                     cell.appendChild(av);
                 }
             }
 
             if (!isMovingMode && canPlace(r, c, currentPlayer)) {
                 cell.classList.add('highlight');
-                cell.onclick = () => placeStone(r, c);
+                cell.onclick = () => {
+                	if (isGameOver) return; // 【追加】
+				    // PvEでCPUの番、またはCvCモードならクリックを無効化
+				    const isCpuTurn = (isPvE && currentPlayer === 2) || isCPUvCPU;
+				    if (isCpuTurn) return; 
+				    
+				    placeStone(r, c);
+				};
             }
             boardEl.appendChild(cell);
         }
@@ -804,7 +1045,15 @@ function placeStone(r, c) {
 
 
 function handleMove(dr, dc) {
-    if (!isMovingMode || ap <= 0) return;
+    if (isGameOver || !isMovingMode || ap <= 0) return; // 【修正】isGameOverを追加
+
+	// --- 追記: CPUのターンなら人間による移動をブロック ---
+    const isCpuTurn = (isPvE && currentPlayer === 2) || isCPUvCPU;
+    // ただし、CPU自身がこの関数を呼ぶので、呼び出し元が「人間」か「CPU」か判別する必要があります。
+    // 一番簡単なのは、runCPUTurn 以外からの入力を弾くことですが、
+    // ここでは「CPUが動いている間はイベントを無視する」フラグを立てるのが確実です。
+    if (isCpuTurn && !isCpuRunningNow) return;
+
     const av = avatars[currentPlayer];
     const nr = av.r + dr, nc = av.c + dc;
 
@@ -983,17 +1232,29 @@ function updateUI() {
     document.getElementById('p2-hp-bar').style.width = (avatars[2].hp/MAX_HP*100)+'%';
 
 	// APとステータスメッセージ
-	const apInd = document.getElementById('ap-indicator');
-	apInd.style.visibility = isMovingMode ? 'visible' : 'hidden';
+	// まず両方のインジケーターを非表示にする
+    const p1ApInd = document.getElementById('p1-ap-indicator');
+    const p2ApInd = document.getElementById('p2-ap-indicator');
+    p1ApInd.style.visibility = 'hidden';
+    p2ApInd.style.visibility = 'hidden';
 
-	if (isMovingMode) {
-	    // 現在のプレイヤーに応じて色と名前を決定
-	    const pName = currentPlayer === 1 ? 'P1' : 'P2';
-	    const pClass = currentPlayer === 1 ? 'p1-text' : 'p2-text';
-	    
-	    // HTMLとして流し込むことでクラス（色）を適用
-	    apInd.innerHTML = `<span class="${pClass}">${pName}</span> AP: <span id="ap-val">${ap}</span> / <span id="ap-max">${apMax}</span>`;
-	}
+    if (isMovingMode) {
+        // 現在のプレイヤー側のAP値を更新し、表示する
+        const currentApVal = document.getElementById(`p${currentPlayer}-ap-val`);
+        const currentApMax = document.getElementById(`p${currentPlayer}-ap-max`);
+        const currentApInd = document.getElementById(`p${currentPlayer}-ap-indicator`);
+
+        if (currentApVal) currentApVal.innerText = ap;
+        if (currentApMax) currentApMax.innerText = apMax;
+        if (currentApInd) {
+	        currentApInd.style.visibility = 'visible';
+	        currentApInd.classList.add('ap-pulse'); // 点滅開始
+	    }
+	} else {
+	    // ターン終了時などにクラスを外す
+	    document.getElementById('p1-ap-indicator').classList.remove('ap-pulse');
+	    document.getElementById('p2-ap-indicator').classList.remove('ap-pulse');
+    }
 
 	// 日数とフェーズの表示ロジック
 	const dayText = `<span style="color: white;">DAY${dayCount}:</span> `;
@@ -1009,7 +1270,7 @@ function updateUI() {
 
 	// BGM切り替え
     if (isMovingMode) {
-        // 王の巡回フェーズ
+        // 将の巡回フェーズ
         playBGM(currentPlayer === 1 ? './bgm/bgm_p1.mp3' : './bgm/bgm_p2.mp3');
     } else {
         // 石を置くフェーズ
@@ -1033,6 +1294,8 @@ function checkGameOver(force = false) {
     }
 
     if (winner) {
+ 	    isGameOver = true; // 【追加】
+        isCPUvCPU = false; // 【追加】CPU観戦を停止
         const statusEl = document.getElementById('status-msg');
 		const dayText = `<span style="color: white;">DAY${dayCount}:</span> `;
         statusEl.innerHTML = dayText + winner + " - GAME OVER -";
@@ -1045,6 +1308,9 @@ function checkGameOver(force = false) {
         const player = document.getElementById('bgm-player');
         player.loop = false; // 終了BGMはループさせない（お好みでtrueでも可）
         playBGM('./bgm/bgm_end.mp3');
+        
+        // 【追加】キーパッドをグレーアウトさせるために描画更新
+        updateKeypad();
     }
 }
 
@@ -1104,7 +1370,11 @@ function updateKeypad() {
 // キーボード操作
 // 1. キーが押された時は、どのキーが押されているかを記録するだけにする
 window.addEventListener('keydown', (e) => {
-    if (!isMovingMode) return;
+    if (isGameOver || !isMovingMode) return; // 【修正】isGameOverを追加
+	// --- 追記: CPUのターンなら入力を受け付けない ---
+    const isCpuTurn = (isPvE && currentPlayer === 2) || isCPUvCPU;
+    if (isCpuTurn) return;
+
     if (e.key.startsWith('Arrow')) {
         activeKeys.add(e.key);
         e.preventDefault(); // スクロール防止
@@ -1158,22 +1428,59 @@ function hasMove(p) { for(let r=0; r<8; r++) for(let c=0; c<8; c++) if(canPlace(
 // BGM制御用
 function playBGM(src) {
     const player = document.getElementById('bgm-player');
-    const currentSrc = player.getAttribute('src');
     
+    // 1. まずソースをセット（曲が変わる場合のみ）
+    const currentSrc = player.getAttribute('src');
     if (currentSrc !== src) {
         player.src = src;
-        player.load(); // スマホ用に明示的にロード
-        
-        // 再生実行。エラー（まだロック中など）が出てもコンソールに逃がす
+        player.load();
+    }
+
+    // 2. スイッチがON（bgmEnabled）の時だけ再生を試みる
+    if (bgmEnabled) {
         const promise = player.play();
         if (promise !== undefined) {
             promise.catch(error => {
                 console.log("Auto-play was prevented. Waiting for next interaction.");
             });
         }
+    } else {
+        // スイッチがOFFなら停止させる
+        player.pause();
     }
 }
+// BGM ON/OFFトグルスイッチ
+function syncBgmToggles(isEnabled) {
+    bgmEnabled = isEnabled;
+    
+    // 両方のスイッチの状態を合わせる
+    const tModal = document.getElementById('bgmToggleModal');
+    const tGame = document.getElementById('bgmToggleGame');
+    if (tModal) tModal.checked = isEnabled;
+    if (tGame) tGame.checked = isEnabled;
 
+    const player = document.getElementById('bgm-player');
+    
+    if (!isEnabled) {
+    	// OFFにした時は一時停止
+        player.pause();
+	} else {
+        // 1. まず、現在「ゲーム中」か「タイトル（モーダル表示中）」かを判定する
+        const startModal = document.getElementById('startModal');
+        const isTitle = (startModal && startModal.style.display !== 'none');
+
+        if (isTitle) {
+            // A. タイトル画面なら、タイトル曲を再生
+            playBGM('./bgm/bgm_title.mp3');
+        } else {
+            // B. ゲーム中なら、現在の状況に合わせて再生
+            updateUI(); 
+        }
+
+        // 最後に再生を実行（playBGMを介しているので二重になりますが、念のため）
+        player.play().catch(e => console.log("Audio play deferred"));
+    }
+}
 
 
 
@@ -1242,6 +1549,7 @@ function closeStory() {
  */
 function returnToTitle() {
 	playSE(sounds.back);
+	isGameOver = false; // 【追加】リセット
     // 1. 【追記】CPU観戦モードのループを強制停止させる
     isCPUvCPU = false; 
     
@@ -1317,21 +1625,21 @@ function getCPUMove() {
 
                 // --- 性格別スコアリング ---
                 if (character === 'blood') {
-                    // 覇王：敵王を殴れる（石を裏返せる）場所を最優先
+                    // 覇将：敵将を殴れる（石を裏返せる）場所を最優先
                     const hits = flips.filter(f => f[0] === avatars[opponent].r && f[1] === avatars[opponent].c);
                     score += hits.length * 1000;
                 } 
                 else if (character === 'iron') {
-                    // 堅実王：角(100点)や端(20点)を優先
+                    // 堅実将：角(100点)や端(20点)を優先
                     if ((r === 0 || r === 7) && (c === 0 || c === 7)) score += 100;
                     else if (r === 0 || r === 7 || c === 0 || c === 7) score += 20;
                 } 
                 else if (character === 'saint') {
-                    // 慈愛王：裏返し枚数そのものを重視（大回復）
+                    // 慈愛将：裏返し枚数そのものを重視（大回復）
                     score += flips.length * 10;
                 } 
                 else if (character === 'joker') {
-                    // 乱心王：敵王の隣接マスを狙って移動を制限
+                    // 乱心将：敵将の隣接マスを狙って移動を制限
                     const dist = Math.abs(r - avatars[opponent].r) + Math.abs(c - avatars[opponent].c);
                     if (dist === 1) score += 50;
                 }
@@ -1360,7 +1668,7 @@ function getCPURoute() {
             let moveScore = 0;
             
             if (character === 'blood') {
-                // 敵王への距離を詰める
+                // 敵将への距離を詰める
                 const distBefore = Math.abs(av.r - avatars[opponent].r) + Math.abs(av.c - avatars[opponent].c);
                 const distAfter = Math.abs(nr - avatars[opponent].r) + Math.abs(nc - avatars[opponent].c);
                 if (distAfter < distBefore) moveScore += 100;
@@ -1385,12 +1693,14 @@ function getCPURoute() {
 // CPU観戦
 let isCPUvCPU = false;
 let cpuWaitTime = 500; // デフォルト値
+let isCpuRunningNow = false;
 
 function runCPUTurn() {
     // CPU観戦モード、または（PvEモード かつ 現在がCPUの番）の時だけ実行
     const isCpuCurrentPlayer = (isPvE && currentPlayer === 2);
     if (!isCPUvCPU && !isCpuCurrentPlayer) return;
 
+	isCpuRunningNow = true; // 【追記】CPUが動いていることを示す
     // 処理を実行
     let nextStepPossible = false;
     if (!isMovingMode) {
@@ -1421,7 +1731,7 @@ function runCPUTurn() {
             nextStepPossible = true;
         }
     }
-
+	isCpuRunningNow = false; // 【追記】処理が終わったのでフラグを下ろす
     // 次のステップを予約（処理が終わってから次のタイマーを開始する）
     if (nextStepPossible) {
         setTimeout(runCPUTurn, cpuWaitTime); // 観戦速度は変数に応じる
@@ -1436,29 +1746,36 @@ function updateRuleText() {
     const apRateText = apValue === "1" ? "1.0" : "0.5";
     document.getElementById('rule-apRate').innerText = apRateText;
     document.getElementById('rule-apRate-en').innerText = apRateText;
+    document.getElementById('rule-apRate-tc').innerText = apRateText;
     
     // その他各種コスト
     document.getElementById('rule-cOwn').innerText = "-" + document.getElementById('conf-cOwn').value;
     document.getElementById('rule-cOwn-en').innerText = "-" + document.getElementById('conf-cOwn').value;
+    document.getElementById('rule-cOwn-tc').innerText = "-" + document.getElementById('conf-cOwn').value;
     document.getElementById('rule-cEnemy').innerText = "-" + document.getElementById('conf-cEnemy').value;
     document.getElementById('rule-cEnemy-en').innerText = "-" + document.getElementById('conf-cEnemy').value;
+    document.getElementById('rule-cEnemy-tc').innerText = "-" + document.getElementById('conf-cEnemy').value;
     document.getElementById('rule-cRepeat').innerText = "-" + document.getElementById('conf-cRepeat').value;
     document.getElementById('rule-cRepeat-en').innerText = "-" + document.getElementById('conf-cRepeat').value;
+    document.getElementById('rule-cRepeat-tc').innerText = "-" + document.getElementById('conf-cRepeat').value;
     document.getElementById('rule-cBoss').innerText = "-" + document.getElementById('conf-cBoss').value;
     document.getElementById('rule-cBoss-en').innerText = "-" + document.getElementById('conf-cBoss').value;
+    document.getElementById('rule-cBoss-tc').innerText = "-" + document.getElementById('conf-cBoss').value;
     
     // 回復・攻撃
     document.getElementById('rule-rRate').innerText = document.getElementById('conf-rRate').value;
     document.getElementById('rule-rRate-en').innerText = document.getElementById('conf-rRate').value;
+    document.getElementById('rule-rRate-tc').innerText = document.getElementById('conf-rRate').value;
     document.getElementById('rule-atkBase').innerText = document.getElementById('conf-atkBase').value;
     document.getElementById('rule-atkBase-en').innerText = document.getElementById('conf-atkBase').value;
+    document.getElementById('rule-atkBase-tc').innerText = document.getElementById('conf-atkBase').value;
 }
 
 const cpuDescriptions = {
-    'iron': 'その名の通り、鉄壁。兵の配置から自らの移動戦略まで知略を尽くし、危険を回避する。\nHer defense is perfect. She does everything to stay safe.',
-    'blood': '血の代償を厭わない。短期決戦を是とし、自らも返り血を浴びながら相手を追い詰める。\nShe likes short fights. She keeps attacking even when she is covered in blood.',
-    'saint': '自らの血を自ら拭って士気を高め、兵たちの献身を一身に受け、瞬く間に軍勢を立て直す。\nHe takes care of his health. Because his soldiers are so loyal, he can fix his army in a short time.',
-    'joker': '混沌の象徴。常識を無視した狂人たる動きで、戦場そのものをかき乱す予測不能の道化。\nHe is a crazy clown. No one knows what he will do next. He makes the battlefield a mess.'
+    'iron': 'その名の通り、鉄壁。兵の配置から自らの移動戦略まで知略を尽くし、危険を回避する。\nHer defense is perfect. She does everything to stay safe.\n顧名思義，她固若金湯。從部隊部署到自身行動，她運用一切策略來規避危險。',
+    'blood': '昔ながらの熱血。短期決戦を是とし、命を顧みずに相手を追い詰める。\nShe likes short fights. She keeps attacking because she is not afraid of death.\n她是個熱血老派的人，信奉速戰速決，會不顧自身安危地將對手逼入絕境。',
+    'saint': '自らの血を自ら拭って士気を高め、兵たちの献身を一身に受け、瞬く間に軍勢を立て直す。\nHe takes care of his health. Because his soldiers are so loyal, he can fix his army in a short time.\n他擦去自己的血跡以鼓舞士氣，贏得了士兵們的完全擁戴，並迅速重整了軍隊。',
+    'joker': '混沌の象徴。常識を無視した狂人たる動きで、戦場そのものをかき乱す予測不能の道化。\nHe is a crazy clown. No one knows what he will do next. He makes the battlefield a mess.\n他是混亂的象徵。他是個難以捉摸的小丑，他瘋狂的舉動違背常理，將戰場攪得一團糟。'
 };
 
 function updateCpuUIVisibility() {
