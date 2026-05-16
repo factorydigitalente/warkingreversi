@@ -1,5 +1,11 @@
 <!DOCTYPE html>
 <html lang="ja">
+<!-- 黒白仁棋（こくびゃくじんき、くろしろじんき、ヘイバイレンチー） -->
+<!-- Walking Reversi（ウォーキングリバーシ） -->
+<!-- ver20260516 -->
+<!-- Copyright (C) 2026 Factory Digital Entertainment. All rights reserved. -->
+<!-- このゲーム及び、ゲーム内の使用楽曲の著作権は全て、ファクトリー・デジタル・エンターテインメントおよび矢崎大信が有します。 -->
+<!-- 上記の著作権者に無断で、これらの著作物を出版・放送・演奏・複製・公開に使用することを禁じます。 -->
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -584,6 +590,7 @@ input:checked + .slider:before {
 </style>
 </head>
 <body>
+<!-- ゲーム画面の背景キャラクター演出エリア -->
 <div class="character-overlay">
     <div class="char-group-left">
         <img src="./img/p1dark.png" alt="P1" class="char-img">
@@ -594,37 +601,46 @@ input:checked + .slider:before {
         <img src="./img/p4dark.png" alt="P4" class="char-img">
     </div>
 </div>
-<!-- 開始モーダル -->
-<div id="startModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+<!-- 開始（タイトル）モーダル画面 -->
+<!-- ゲーム起動時に、画面全体を覆って表示する「初期設定＆スタート」の画面です -->
+<div id="startModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; display:flex; flex-direction:column; align-items:center; overflow-y:auto; padding:40px 0;">
+	<!-- ゲームのタイトルロゴ（画像） -->
     <h1 style="color:#f1c40f; font-size:3rem; margin-bottom:10px; text-shadow:0 0 20px rgba(241,196,15,0.5);"><img src="./img/logo.png" width="450px;max-width: 85%; height: auto;" alt="黒白仁棋"></h1>
-    
-    <div style="background:rgba(255,255,255,0.05); padding:30px; border-radius:15px; border:1px solid rgba(255,255,255,0.1); text-align:center; width:350px; max-height:80vh; overflow-y:auto;">
+    <!-- 設定項目をまとめている中央のボックス -->
+    <div style="background:rgba(255,255,255,0.05); padding:30px; border-radius:15px; border:1px solid rgba(255,255,255,0.1); text-align:center; width:350px; box-sizing:border-box;">
+    	<!-- 【対戦モード選択】 -->
         <div style="margin-bottom:20px;">
             <label style="display:block; margin-bottom:10px; font-size:1.2rem; color:#94a3b8;">Battle Mode</label>
+            	<!-- onchange="...": 選択肢が変わった時にJavaScriptの「CPU設定の表示/非表示を切り替える関数」を呼び出します -->
 				<select id="gameModeSelect" onchange="updateCpuUIVisibility()" style="width:100%; padding:10px; background:#1e293b; color:white; border:1px solid #334155; border-radius:5px; font-size:1rem;">
 				    <option value="pvp">P1 vs P2 (２人対戦)</option>
 				    <option value="pve">You vs CPU (CPU対戦)</option>
 				    <option value="cvc">CPU vs CPU (CPU観戦)</option>
 				</select>
 
-				<!-- CPU性格選択：既存の余白ルールに合わせたコンテナ -->
+				<!-- 【CPU選択コンテナ】 ※デフォルトは display:none（非表示）で、CPU戦が選ばれるとJavaScriptで表示されます -->
 				<div id="cpuCharContainer" style="margin-top:20px; display:none;">
+					<!-- CPUの思考タイプ（性格）選択 -->
 				    <label style="display:block; margin-bottom:10px; font-size:1.2rem; color:#94a3b8;">CPU Type</label>
+				    <!-- onchange="...": 選択したCPUに応じて、下の説明文テキストを書き換える関数を呼び出します -->
 				    <select id="cpuCharacterSelect" onchange="updateCpuDescription()" style="width:100%; padding:10px; background:#1e293b; color:white; border:1px solid #334155; border-radius:5px; font-size:1rem;">
 				        <option value="iron">Iron「堅実将」（Guardian:防御型）</option>
 				        <option value="blood">Blood「熱血将」（Tyrant:猛進型）</option>
 				        <option value="saint">Saint「慈愛将」（Priest:回復型）</option>
 				        <option value="joker">Joker「乱心将」（Trickster:道化師型）</option>
 				    </select>
+				    <!-- CPUの特徴を説明するテキスト表示エリア -->
 				    <div id="cpuCharDescription" style="margin-top:15px; padding:12px; background:rgba(255,255,255,0.05); border-left:3px solid #3b82f6; border-radius:4px; min-height:50px;">
 					    <p id="cpuCharText" style="font-size:0.85rem; color:#cbd5e1; line-height:1.6; margin:0;">
 					        キャラクターを選択してください。
 					    </p>
 					</div>
+					<!-- CPUの思考速度（ウェイト時間）を設定するスライダー -->
 					<div style="margin-bottom:20px;">
 					    <label style="display:block; margin-bottom:10px; font-size:1.2rem; color:#94a3b8;">
 					        CPU Speed: <span id="speedValue">500</span>ms
 					    </label>
+					    <!-- type="range": 横スライダー。oninputで動かした値をリアルタイムに上記の「speedValue」に反映します -->
 					    <input type="range" id="cpuSpeedRange" min="100" max="5000" step="100" value="2500" 
 					           style="width:100%; cursor:pointer;" 
 					           oninput="document.getElementById('speedValue').innerText = this.value">
@@ -632,10 +648,11 @@ input:checked + .slider:before {
 				</div>
 
         </div>
-		
+		<!-- 【詳細ルール設定（Config）】 -->
+		<!-- detailsタグ：クリックするとパッと開閉（アコーディオン）する -->
 		<details style="margin-bottom:20px; text-align:left; background:rgba(255,255,255,0.05); padding:10px; border-radius:5px;">
 		    <summary style="color:#f1c40f; cursor:pointer; font-size:1.0rem; margin-bottom:5px;">Config(設定)</summary>
-		    
+		    <!-- グリッド配置で各種パラメータ調整用のスライダーを並べています -->
 		    <div style="font-size:0.75rem; display:grid; gap:10px; margin-top:10px;">
 		        <!-- 初期HP -->
 		        <label>Starting HP (初期HP): <span id="val-initHp">50</span>
@@ -672,13 +689,18 @@ input:checked + .slider:before {
 		        </label>
 		    </div>
 		</details>
+		
+		<!-- 【ボタン類】 -->
+        <!-- ゲーム開始ボタン：クリックでModalを閉じてゲームを始めるJS関数を呼び出します -->
         <button onclick="startGameFromModal()" style="width:100%; padding:15px; background:#af4444; color:white; border:none; border-radius:5px; font-size:1.6rem;font-weight:bold; cursor:pointer; margin-bottom:15px;">START 開始</button>
         <button onclick="openStory()" style="width:100%; padding:10px; background:transparent; color:#f1c40f; border:1px solid #f1c40f; border-radius:5px; cursor:pointer;font-size:1.1rem;">STORY 物語</button>
-    </div>
+    <!-- コピーライト（開発元ロゴ画像） -->
     <p><img src="./img/fde.png" width="250px;max-width: 50%; height: auto;" alt="©2026 Factory Digital Entertainment"></p>
+    </div>
 </div>
 
-<!-- 物語モーダル -->
+<!-- 物語（STORY）モーダル画面 -->
+<!-- 背景ストーリーを読むための画面。初期状態は display:none（非表示）になっています -->
 <div id="storyModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.98); z-index:3000; display:none; flex-direction:column; align-items:center; justify-content:center; padding:20px;">
     <div style="
         width: 90%;             /* 100%ではなく90%にして左右に余裕を持たせる */
@@ -703,14 +725,16 @@ input:checked + .slider:before {
             cursor: pointer;
             z-index: 3100;
             transition: transform 0.2s ease;">
+            <!-- 右上の「（戻る）」画像ボタン -->
             <img src="./img/btn_return.png" alt="戻る" style="width: 100%; height: auto; display: block;">
         </button>
-
+		<!-- イメージ画像 -->
 		<div style="width: 100%; margin-bottom: 20px;">
             <img src="./img/moon.png" alt="Moon" style="width: 100%; height: auto; border-radius: 5px; opacity: 0.8;">
         </div>
         
         <h2 style="color:#f1c40f; text-align:center; border-bottom:1px solid #f1c40f; padding-bottom:10px; margin-bottom:0px;">- STORY -</h2>
+        <!-- ストーリー本文（white-space:pre-wrapにより、コード上の改行がそのまま画面に反映されます） -->
         <div id="storyContent" style="line-height:2; color:#e2e8f0; font-size:1rem; white-space:pre-wrap;">
 Once, in the age of myths, might was right.
 Heroes proved their power by tageneral enemy heads.
@@ -759,7 +783,7 @@ This is the record of lonely generals who left the path of power to find "Jin".
     </div>
 </div>
 
-<!-- ゲーム本編画面のタイトルロゴと戻るボタン -->
+<!-- ゲーム本編画面のタイトルロゴ -->
 <div class="header-logo-container">
     <img src="./img/logo_u.png" alt="黒白仁棋" class="header-logo-img">
     <img src="./img/logo_d.png" alt="Walking Reversi" class="header-logo-img">
@@ -768,10 +792,11 @@ This is the record of lonely generals who left the path of power to find "Jin".
 <!-- 全体を横並びにするためのコンテナ -->
 <div class="game-view-container">
 
-	<!-- ルール表示：detailsタグに変更してスマホで閉じれるようにする -->
+	<!-- ルール表示：detailsタグに変更してスマホで閉じれるようにする。設定スライダーの値がJavaScript経由で自動挿入される -->
     <details class="game-guide" open style="text-align: left; padding: 10px; background: rgba(0,0,0,0.3);">
     	<summary class="rule-summary">📜 ルール Rule</summary>
         <div class="guide-content">
+        	<!-- 日本語ルール -->
 		    <strong>■ 兵が敵陣の石を裏返して陣地を広げたら、「将」による巡回フェーズに突入。</strong><br>
 		    ・AP ＝ 自分の石の総数×<span id="rule-apRate" class="var-num"></span><br>
 		    APが0になるまで、将自身が巡回し、戦況を見て回れ。<br>
@@ -792,6 +817,7 @@ This is the record of lonely generals who left the path of power to find "Jin".
 		    ・両者石を置けなくなった場合、<strong>総合得点</strong>にて勝敗。<br>
 		    <strong>総合得点 ＝ (自分の石の数 × 10) ＋ (残りHP × 8)</strong>
 			<hr>
+			<!-- 英語ルール (English Rule) -->
 			<strong>■ Once your soldiers flip the enemy's stones and expand your area, the "general's Walking Phase" begins.</strong><br>
 			・AP = Total your stones × <span id="rule-apRate-en" class="var-num"></span><br>
 			The general must patrol and survey the battlefield until AP reaches 0.<br>
@@ -812,6 +838,7 @@ This is the record of lonely generals who left the path of power to find "Jin".
 			・If neither player can place a stone, the winner is decided by the <strong>Total Score</strong>.<br>
 			<strong>Total Score = (Own total stones × 10) + (Remaining HP × 8)</strong>
 			<hr>
+			<!-- 繁体字ルール (Traditional Chinese Rule) -->
 		    <strong>■ 士兵翻轉敵陣棋子並擴張領地後，即進入「將」巡回階段。</strong><br>
 		    ・AP（行動點數）＝ 己方棋子總數 x <span id="rule-apRate-tc" class="var-num"></span><br>
 		    在 AP 歸零前，將須親自巡視並視察戰況。<br>
@@ -835,6 +862,7 @@ This is the record of lonely generals who left the path of power to find "Jin".
 	</details>
 
 	<div id="right-top-menu">
+		<!-- BGMスイッチ -->
 		<div id="game-bgm-ctrl">
 		    <span style="font-size: 0.8rem;">♪</span>
 		    <label class="switch">
@@ -851,8 +879,9 @@ This is the record of lonely generals who left the path of power to find "Jin".
 	<!-- ゲーム本体をまとめるエリア -->
 	<div class="game-main-content">
 
+		<!-- 現在の手番や勝敗などのメッセージテキスト表示部 -->
 		<div id="status-msg">黒白仁棋</div>
-
+		<!-- スコア・AP情報の表示パネル -->
 		<div id="score-panel">
 		    <div class="score-box">
 		        <div class="score-label">P1 SCORE</div>
@@ -868,33 +897,38 @@ This is the record of lonely generals who left the path of power to find "Jin".
 
 
 		<div id="ui-panel">
-		    <!-- リアルタイム計算式エリア -->
+		    <!-- リアルタイムスコア計算式エリア -->
 		    <div id="formula-display" style="font-size: 0.75rem; color: #94a3b8; text-align: center; margin-bottom: 0px; font-family: monospace; background: rgba(0,0,0,0.2); padding: 0px; border-radius: 4px;">
 		        <div id="p1-formula">P1: (0stone × 10) + (50HP × 8) = 400</div>
 		        <div id="p2-formula">P2: (0stone × 10) + (50HP × 8) = 400</div>
 		    </div>
+		    <!-- HP表示、HPゲージ -->
 		    <div class="hp-bar-container">
 		        <div>P1(Black) HP: <span id="p1-hp-val">50</span> <div class="hp-bg"><div id="p1-hp-bar" class="hp-fill p1-hp"></div></div></div>
 		        <div style="text-align: right;">P2(White) HP: <span id="p2-hp-val">50</span> <div class="hp-bg"><div id="p2-hp-bar" class="hp-fill p2-hp"></div></div></div>
 		    </div>
 		</div>
 
-		<!-- 盤面とキーパッドを横並びにするためのコンテナを追加 -->
+		<!-- 盤面とキーパッドを横並びにするためのコンテナ -->
     	<div class="game-play-area">
+    		<!-- ゲーム盤面（メインボード）。（マス目や石）は、動的に生成（createElement）されて挿入されます -->
 			<div id="board"></div>
-
+			<!-- 将（キャラクター）の移動8方向キーパッド -->
+			<!-- 例: (-1, -1)なら左上へ、(0, 1)なら右へ移動。各ボタン内のcost-hintには消費HP予測値を表示 -->
 			<div class="keypad">
 			    <button id="key-nw" class="key-btn" onmousedown="handleMove(-1, -1)">↖<span class="cost-hint"></span></button>
 			    <button id="key-n"  class="key-btn" onmousedown="handleMove(-1, 0)">↑<span class="cost-hint"></span></button>
 			    <button id="key-ne" class="key-btn" onmousedown="handleMove(-1, 1)">↗<span class="cost-hint"></span></button>
 			    <button id="key-w"  class="key-btn" onmousedown="handleMove(0, -1)">←<span class="cost-hint"></span></button>
+			    <!-- キーパッド中央の固定ラベル（ボタンではなく、現在のモードを表す飾り） -->
 			    <div class="key-btn" style="font-size: 10px; opacity: 1;">Walk</div>
 			    <button id="key-e"  class="key-btn" onmousedown="handleMove(0, 1)">→<span class="cost-hint"></span></button>
 			    <button id="key-sw" class="key-btn" onmousedown="handleMove(1, -1)">↙<span class="cost-hint"></span></button>
 			    <button id="key-s"  class="key-btn" onmousedown="handleMove(1, 0)">↓<span class="cost-hint"></span></button>
 			    <button id="key-se" class="key-btn" onmousedown="handleMove(1, 1)">↘<span class="cost-hint"></span></button>
 			</div>
-		</div>
+		</div> <!-- game-play-area 終わり -->
+
 
 	</div> <!-- game-main-content 終わり -->
 </div> <!-- game-view-container 終わり -->
@@ -1094,7 +1128,16 @@ function handleMove(dr, dc) {
 	playSE(sounds.walk);
 	// applyHPの結果（死亡したか）を受け取る
     const isDead = applyHP(currentPlayer, damage, nr, nc, msg);
-    if (isDead) return; // 死亡していたら、移動処理をここで中断
+
+	// もし死亡していたら、移動と描画の最低限の処理だけを行って終了する
+    if (isDead) {
+        av.r = nr; // アバターの座標を移動先に更新
+        av.c = nc;
+        ap--;            // 最後の一歩分のAPをしっかり消費する
+        updateUI();      // 減ったAPや0になったHPをステータス画面に反映
+        drawBoard(); // 移動後の盤面を描画
+        return; // APの減少や次のターン（endTurn）の処理は行わずにここで完全に終了
+    }
 
     visitedCells.add(cellKey);
     av.r = nr; av.c = nc;
@@ -1138,7 +1181,10 @@ function applyHP(player, amount, r, c, txt) {
 
     // HPが0になったら即判定し、死亡フラグ(true)を返す
     if (avatars[player].hp <= 0) {
-        checkGameOver();
+		// ゲームオーバーの表示だけを少し遅らせて、アバターの移動が見える猶予を作る
+        setTimeout(() => {
+            checkGameOver();
+        }, 200);
         return true; 
     }
     return false;
@@ -1268,14 +1314,35 @@ function updateUI() {
 	// どちらかのHPが0（終局）なら、ここから下のBGM切り替えは行わない
 	if (avatars[1].hp <= 0 || avatars[2].hp <= 0) return;
 
-	// BGM切り替え
-    if (isMovingMode) {
-        // 将の巡回フェーズ
-        playBGM(currentPlayer === 1 ? './bgm/bgm_p1.mp3' : './bgm/bgm_p2.mp3');
+	// キャラクター別BGM選択ロジック
+    let targetBGM = './bgm/bgm_p1.mp3'; // デフォルト
+    const charSelect = document.getElementById('cpuCharacterSelect');
+    const character = charSelect ? charSelect.value : 'iron';
+
+    const bgmMap = {
+        iron: './bgm/bgm_e1.mp3',
+        blood: './bgm/bgm_e2.mp3',
+        saint: './bgm/bgm_e3.mp3',
+        joker: './bgm/bgm_e4.mp3'
+    };
+
+    if (isCPUvCPU) {
+        // CPU観戦モード：手番に関わらず、選択されたCPUのテーマ曲を再生
+        targetBGM = bgmMap[character];
+    } else if (isPvE) {
+        // CPU対戦モード：P1なら人間（p1曲）、P2ならCPUの性格曲
+        if (currentPlayer === 1) {
+            targetBGM = './bgm/bgm_p1.mp3';
+        } else {
+            targetBGM = bgmMap[character];
+        }
     } else {
-        // 石を置くフェーズ
-        playBGM(currentPlayer === 1 ? './bgm/bgm_stone1.mp3' : './bgm/bgm_stone2.mp3');
+        // PvP（対人戦）モード：P1ならp1曲、P2ならp2曲
+        targetBGM = currentPlayer === 1 ? './bgm/bgm_p1.mp3' : './bgm/bgm_p2.mp3';
     }
+
+    // フェーズに応じた再生速度フラグを引数に追加して呼び出し
+    playBGM(targetBGM, isMovingMode);
 
 }
 
@@ -1294,8 +1361,8 @@ function checkGameOver(force = false) {
     }
 
     if (winner) {
- 	    isGameOver = true; // 【追加】
-        isCPUvCPU = false; // 【追加】CPU観戦を停止
+ 	    isGameOver = true; // 勝敗判定
+        isCPUvCPU = false; // CPU観戦を停止
         const statusEl = document.getElementById('status-msg');
 		const dayText = `<span style="color: white;">DAY${dayCount}:</span> `;
         statusEl.innerHTML = dayText + winner + " - GAME OVER -";
@@ -1425,8 +1492,8 @@ function getFlips(r, c, player) {
 function canPlace(r, c, p) { return getFlips(r, c, p).length > 0; }
 function hasMove(p) { for(let r=0; r<8; r++) for(let c=0; c<8; c++) if(canPlace(r,c,p)) return true; return false; }
 
-// BGM制御用
-function playBGM(src) {
+// BGM制御用（再生速度も制御）
+function playBGM(src,isWalking) {
     const player = document.getElementById('bgm-player');
     
     // 1. まずソースをセット（曲が変わる場合のみ）
@@ -1436,7 +1503,10 @@ function playBGM(src) {
         player.load();
     }
 
-    // 2. スイッチがON（bgmEnabled）の時だけ再生を試みる
+	// 2. 再生速度（ピッチ）の設定：巡回なら0.9倍速、配置なら1.0倍速
+    player.playbackRate = isWalking ? 0.9 : 1.0;
+
+    // 3. スイッチがON（bgmEnabled）の時だけ再生を試みる
     if (bgmEnabled) {
         const promise = player.play();
         if (promise !== undefined) {
@@ -1519,14 +1589,8 @@ function startGameFromModal() {
         runCPUTurn(); 
     }
     
-    // BGM処理
-    const player = document.getElementById('bgm-player');
-    player.src = './bgm/bgm_stone1.mp3';
-    player.play().then(() => {
-        updateUI(); 
-    }).catch(e => {
-        updateUI();
-    });
+	// ゲーム開始時の一時的な固定BGM指定を廃止し、速やかに初期UI/BGM選択(updateUI)へ委ねる
+    updateUI();
 
     document.getElementById('return-to-title-btn').style.visibility = 'visible';
 }
@@ -1696,6 +1760,10 @@ let cpuWaitTime = 500; // デフォルト値
 let isCpuRunningNow = false;
 
 function runCPUTurn() {
+
+	// 【修正1】すでにタイマーが動いているなら、重複起動を防ぐために即座に終了する（安全ロック）
+    if (isCpuRunningNow) return;
+
     // CPU観戦モード、または（PvEモード かつ 現在がCPUの番）の時だけ実行
     const isCpuCurrentPlayer = (isPvE && currentPlayer === 2);
     if (!isCPUvCPU && !isCpuCurrentPlayer) return;
@@ -1703,6 +1771,7 @@ function runCPUTurn() {
 	isCpuRunningNow = true; // 【追記】CPUが動いていることを示す
     // 処理を実行
     let nextStepPossible = false;
+    
     if (!isMovingMode) {
     	// 石を置くフェーズ
         const move = getCPUMove();
@@ -1726,15 +1795,18 @@ function runCPUTurn() {
                 nextStepPossible = true;
             }
         } else {
-            // APが切れている場合は handleMove 内で endTurn が呼ばれるので、
-            // 少し待ってから次のターン（石置き）へ
-            nextStepPossible = true;
+			// APが0の時は、次のターン（プレイヤーの手番など）に安全に移るため、
+            // ここでは次のCPUタイマーを予約させない（false のままにする）
+            nextStepPossible = false;
         }
     }
-	isCpuRunningNow = false; // 【追記】処理が終わったのでフラグを下ろす
-    // 次のステップを予約（処理が終わってから次のタイマーを開始する）
-    if (nextStepPossible) {
-        setTimeout(runCPUTurn, cpuWaitTime); // 観戦速度は変数に応じる
+	if (nextStepPossible) {
+        // 【修正2】次の実行（500ms後）を予約するタイミングで、初めてロックを解除する
+        isCpuRunningNow = false; 
+        setTimeout(runCPUTurn, cpuWaitTime); 
+    } else {
+        // 次のステップがない場合（ターン終了時など）もロックを解除して終わる
+        isCpuRunningNow = false; 
     }
 }
 
